@@ -1,653 +1,1639 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SiteCheck — Website Health Diagnostics</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<title>SiteGrade AI — Website Intelligence</title>
+<meta name="description" content="AI-powered website performance and SEO analysis.">
+
 <style>
-  :root{
-    --bg:#0A0E14;
-    --panel:#10151F;
-    --panel-2:#141B27;
-    --border:#1E2633;
-    --text:#E8ECF1;
-    --muted:#7A8699;
-    --muted-2:#4E5A6E;
-    --signal:#FF6B35;
-    --signal-dim:#7A3A1F;
-    --green:#3DDC84;
-    --amber:#F5A623;
-    --red:#FF5470;
-    --teal:#4FD1C5;
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg: #05070b;
+  --panel: rgba(13, 17, 27, .72);
+  --panel-solid: #0d111b;
+  --border: rgba(255,255,255,.09);
+  --border-bright: rgba(255,255,255,.15);
+  --text: #f5f7fa;
+  --muted: #8992a3;
+  --cyan: #56e0ff;
+  --purple: #8b5cf6;
+  --green: #40e59a;
+  --yellow: #f7c948;
+  --red: #ff5c7a;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background:
+    radial-gradient(circle at 50% -10%, rgba(86,224,255,.10), transparent 35%),
+    radial-gradient(circle at 80% 20%, rgba(139,92,246,.08), transparent 25%),
+    var(--bg);
+  color: var(--text);
+  font-family: Inter, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* BACKGROUND */
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: .18;
+  background-image:
+    linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+  background-size: 55px 55px;
+  mask-image: linear-gradient(to bottom, black, transparent 80%);
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  width: 600px;
+  height: 600px;
+  left: 50%;
+  top: -400px;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, rgba(86,224,255,.12), transparent 65%);
+  filter: blur(30px);
+  pointer-events: none;
+}
+
+/* GLOBAL */
+
+.container {
+  width: min(1180px, 92%);
+  margin: auto;
+}
+
+.mono {
+  font-family: "DM Mono", monospace;
+}
+
+/* NAV */
+
+nav {
+  height: 82px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  z-index: 5;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  font-weight: 800;
+  letter-spacing: -.5px;
+}
+
+.logo-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background:
+    linear-gradient(135deg, var(--cyan), var(--purple));
+  display: grid;
+  place-items: center;
+  color: #05070b;
+  font-weight: 900;
+  box-shadow: 0 0 30px rgba(86,224,255,.25);
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.025);
+  border-radius: 30px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  background: var(--green);
+  border-radius: 50%;
+  box-shadow: 0 0 12px var(--green);
+}
+
+/* HERO */
+
+.hero {
+  min-height: 650px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  padding: 60px 0 100px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(86,224,255,.18);
+  background: rgba(86,224,255,.045);
+  color: var(--cyan);
+  padding: 8px 13px;
+  border-radius: 30px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+
+.eyebrow span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 10px var(--cyan);
+}
+
+.hero h1 {
+  max-width: 900px;
+  font-size: clamp(48px, 8vw, 88px);
+  line-height: .96;
+  letter-spacing: -5px;
+  font-weight: 800;
+}
+
+.gradient-text {
+  background: linear-gradient(
+    100deg,
+    #fff 20%,
+    #b8f4ff 48%,
+    #9c7cff 80%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero-sub {
+  max-width: 650px;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.7;
+  margin: 25px auto 35px;
+}
+
+/* INPUT */
+
+.input-shell {
+  width: min(730px, 100%);
+  padding: 6px;
+  border-radius: 17px;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(86,224,255,.22),
+      rgba(139,92,246,.22)
+    );
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.04),
+    0 20px 70px rgba(0,0,0,.35);
+}
+
+.input-box {
+  display: flex;
+  background: #090c13;
+  border-radius: 12px;
+  padding: 5px;
+}
+
+.input-box input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: white;
+  padding: 15px;
+  font-size: 15px;
+}
+
+.input-box input::placeholder {
+  color: #606979;
+}
+
+.scan-btn {
+  border: 0;
+  border-radius: 9px;
+  padding: 0 24px;
+  min-height: 49px;
+  background: linear-gradient(135deg, #7deaff, #9874ff);
+  color: #05070b;
+  font-weight: 800;
+  cursor: pointer;
+  transition: .25s;
+  box-shadow: 0 0 25px rgba(86,224,255,.16);
+}
+
+.scan-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 35px rgba(86,224,255,.3);
+}
+
+.scan-btn:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+
+.trust-row {
+  display: flex;
+  gap: 20px;
+  color: #606979;
+  font-size: 11px;
+  margin-top: 15px;
+}
+
+/* HERO DECORATION */
+
+.orbit {
+  position: absolute;
+  width: 720px;
+  height: 720px;
+  border: 1px solid rgba(86,224,255,.045);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.orbit::before {
+  content: "";
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: var(--cyan);
+  border-radius: 50%;
+  top: 90px;
+  left: 95px;
+  box-shadow: 0 0 20px var(--cyan);
+}
+
+/* LOADING */
+
+#loading {
+  display: none;
+  min-height: 650px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+}
+
+.scanner {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 1px solid rgba(86,224,255,.3);
+  position: relative;
+  display: grid;
+  place-items: center;
+  margin-bottom: 30px;
+  box-shadow:
+    0 0 50px rgba(86,224,255,.08),
+    inset 0 0 40px rgba(86,224,255,.05);
+}
+
+.scanner::before {
+  content: "";
+  position: absolute;
+  width: 80%;
+  height: 80%;
+  border-radius: 50%;
+  border: 1px dashed rgba(139,92,246,.45);
+  animation: spin 3s linear infinite;
+}
+
+.scanner::after {
+  content: "";
+  position: absolute;
+  width: 2px;
+  height: 48%;
+  top: 2%;
+  left: 50%;
+  background: linear-gradient(var(--cyan), transparent);
+  transform-origin: bottom;
+  animation: sweep 1.6s linear infinite;
+}
+
+.scanner-core {
+  width: 14px;
+  height: 14px;
+  background: var(--cyan);
+  border-radius: 50%;
+  box-shadow: 0 0 25px var(--cyan);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes sweep {
+  to { transform: rotate(360deg); }
+}
+
+.loading-title {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.loading-status {
+  font-family: "DM Mono", monospace;
+  color: var(--cyan);
+  font-size: 12px;
+  margin-top: 12px;
+}
+
+/* RESULTS */
+
+#results {
+  display: none;
+  padding: 40px 0 100px;
+}
+
+.result-top {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.glass {
+  background: linear-gradient(
+    145deg,
+    rgba(255,255,255,.045),
+    rgba(255,255,255,.018)
+  );
+  border: 1px solid var(--border);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+}
+
+.result-info {
+  padding: 30px;
+  position: relative;
+  overflow: hidden;
+}
+
+.result-info::after {
+  content: "";
+  position: absolute;
+  width: 250px;
+  height: 250px;
+  right: -100px;
+  top: -100px;
+  border-radius: 50%;
+  background: rgba(86,224,255,.06);
+  filter: blur(30px);
+}
+
+.kicker {
+  color: var(--cyan);
+  font-family: "DM Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.tested-url {
+  color: #798294;
+  font-family: "DM Mono", monospace;
+  font-size: 12px;
+  word-break: break-all;
+  margin-bottom: 15px;
+}
+
+.result-info h2 {
+  font-size: 30px;
+  letter-spacing: -1.2px;
+  margin-bottom: 10px;
+}
+
+.result-info p {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+  max-width: 600px;
+}
+
+.score-card {
+  padding: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.score-ring {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  position: relative;
+  background:
+    radial-gradient(circle, #0c111a 59%, transparent 60%),
+    conic-gradient(
+      var(--cyan) 0deg,
+      var(--purple) 220deg,
+      rgba(255,255,255,.06) 220deg
+    );
+  box-shadow:
+    0 0 60px rgba(86,224,255,.08);
+}
+
+.score-ring::before {
+  content: "";
+  position: absolute;
+  inset: 11px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.06);
+}
+
+.score-inner {
+  text-align: center;
+  position: relative;
+}
+
+.score-number {
+  font-size: 54px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -3px;
+}
+
+.score-out {
+  color: #6f7888;
+  font-size: 9px;
+  font-family: "DM Mono", monospace;
+  margin-top: 5px;
+}
+
+/* METRICS */
+
+.metrics-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 28px 2px 13px;
+}
+
+.metrics-heading h3 {
+  font-size: 15px;
+}
+
+.metrics-heading span {
+  font-family: "DM Mono", monospace;
+  color: #606979;
+  font-size: 10px;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.metric {
+  padding: 20px;
+  min-height: 165px;
+  position: relative;
+  overflow: hidden;
+}
+
+.metric::after {
+  content: "";
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  right: -30px;
+  bottom: -30px;
+  border-radius: 50%;
+  background: rgba(86,224,255,.035);
+  filter: blur(15px);
+}
+
+.metric-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.metric-icon {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: rgba(255,255,255,.045);
+  font-size: 14px;
+}
+
+.metric-score {
+  font-family: "DM Mono", monospace;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.metric-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #c8ced8;
+}
+
+.progress {
+  height: 4px;
+  border-radius: 10px;
+  background: rgba(255,255,255,.06);
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.progress-fill {
+  width: 0;
+  height: 100%;
+  border-radius: 10px;
+  transition: width 1.4s cubic-bezier(.22,1,.36,1);
+}
+
+.metric-desc {
+  color: #636d7e;
+  font-size: 10px;
+  line-height: 1.5;
+  margin-top: 12px;
+}
+
+/* RECOMMENDATION */
+
+.recommendation {
+  margin-top: 18px;
+  padding: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+  overflow: hidden;
+  position: relative;
+}
+
+.recommendation::before {
+  content: "";
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  left: -150px;
+  top: -150px;
+  background: rgba(139,92,246,.08);
+  border-radius: 50%;
+  filter: blur(50px);
+}
+
+.recommendation-content {
+  position: relative;
+}
+
+.recommendation .kicker {
+  color: #a78bfa;
+}
+
+.recommendation h3 {
+  font-size: 17px;
+  margin-bottom: 7px;
+}
+
+.recommendation p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+  max-width: 720px;
+}
+
+.analyze-again {
+  position: relative;
+  white-space: nowrap;
+  border: 1px solid var(--border-bright);
+  background: rgba(255,255,255,.04);
+  color: white;
+  padding: 12px 17px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* FOOTER */
+
+footer {
+  border-top: 1px solid rgba(255,255,255,.06);
+  color: #555e6e;
+  font-size: 10px;
+  text-align: center;
+  padding: 25px;
+}
+
+/* MOBILE */
+
+@media(max-width: 850px) {
+
+  .metrics {
+    grid-template-columns: repeat(2, 1fr);
   }
 
-  *{margin:0;padding:0;box-sizing:border-box;}
-
-  body{
-    background:var(--bg);
-    color:var(--text);
-    font-family:'Inter',sans-serif;
-    line-height:1.5;
-    background-image:
-      linear-gradient(var(--border) 1px, transparent 1px),
-      linear-gradient(90deg, var(--border) 1px, transparent 1px);
-    background-size:64px 64px;
-    background-position:center top;
-    min-height:100vh;
+  .result-top {
+    grid-template-columns: 1fr;
   }
 
-  body::before{
-    content:"";
-    position:fixed;
-    inset:0;
-    background:radial-gradient(ellipse 900px 500px at 50% 0%, rgba(255,107,53,0.07), transparent 70%);
-    pointer-events:none;
-    z-index:0;
+  .score-card {
+    min-height: 260px;
+  }
+}
+
+@media(max-width: 600px) {
+
+  .container {
+    width: 90%;
   }
 
-  .wrap{
-    max-width:760px;
-    margin:0 auto;
-    padding:0 24px;
-    position:relative;
-    z-index:1;
+  nav {
+    height: 70px;
   }
 
-  header{
-    padding:32px 0 24px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    border-bottom:1px solid var(--border);
+  .status-pill {
+    display: none;
   }
 
-  .logo{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    font-family:'Space Grotesk',sans-serif;
-    font-weight:700;
-    font-size:18px;
-    letter-spacing:0.02em;
+  .hero {
+    min-height: 600px;
+    padding-top: 40px;
   }
 
-  .logo-dot{
-    width:9px;height:9px;border-radius:50%;
-    background:var(--signal);
-    box-shadow:0 0 0 3px var(--signal-dim);
+  .hero h1 {
+    font-size: 49px;
+    letter-spacing: -3px;
   }
 
-  header .tag{
-    font-family:'JetBrains Mono',monospace;
-    font-size:12px;
-    color:var(--muted);
+  .hero-sub {
+    font-size: 14px;
   }
 
-  main{padding:56px 0 40px;}
-
-  .eyebrow{
-    font-family:'JetBrains Mono',monospace;
-    font-size:12px;
-    color:var(--signal);
-    letter-spacing:0.08em;
-    text-transform:uppercase;
-    margin-bottom:14px;
-    display:flex;
-    align-items:center;
-    gap:8px;
+  .input-box {
+    flex-direction: column;
   }
 
-  .eyebrow::before{
-    content:"";
-    width:16px;height:1px;
-    background:var(--signal);
+  .scan-btn {
+    min-height: 50px;
   }
 
-  h1{
-    font-family:'Space Grotesk',sans-serif;
-    font-weight:700;
-    font-size:clamp(32px, 5.5vw, 46px);
-    line-height:1.12;
-    letter-spacing:-0.01em;
-    margin-bottom:16px;
+  .trust-row {
+    flex-direction: column;
+    gap: 5px;
   }
 
-  h1 span{color:var(--muted);}
-
-  .lede{
-    color:var(--muted);
-    font-size:16px;
-    max-width:52ch;
-    margin-bottom:36px;
+  .metrics {
+    grid-template-columns: 1fr;
   }
 
-  .console{
-    background:var(--panel);
-    border:1px solid var(--border);
-    border-radius:10px;
-    overflow:hidden;
+  .recommendation {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
-  .console-bar{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    padding:12px 16px;
-    border-bottom:1px solid var(--border);
-    background:var(--panel-2);
+  .analyze-again {
+    width: 100%;
   }
-
-  .console-bar span{
-    width:9px;height:9px;border-radius:50%;
-    background:var(--muted-2);
-  }
-
-  .console-bar small{
-    margin-left:8px;
-    font-family:'JetBrains Mono',monospace;
-    font-size:11px;
-    color:var(--muted);
-  }
-
-  .console-body{padding:22px 20px;}
-
-  form{
-    display:flex;
-    gap:10px;
-    align-items:stretch;
-  }
-
-  .prompt{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    flex:1;
-    background:var(--bg);
-    border:1px solid var(--border);
-    border-radius:7px;
-    padding:0 14px;
-    transition:border-color .15s ease;
-  }
-
-  .prompt:focus-within{border-color:var(--signal);}
-
-  .prompt span{
-    font-family:'JetBrains Mono',monospace;
-    color:var(--signal);
-    font-size:14px;
-  }
-
-  .prompt input{
-    flex:1;
-    background:transparent;
-    border:0;
-    outline:0;
-    color:var(--text);
-    font-family:'JetBrains Mono',monospace;
-    font-size:14px;
-    padding:14px 0;
-  }
-
-  .prompt input::placeholder{color:var(--muted-2);}
-
-  button{
-    font-family:'Space Grotesk',sans-serif;
-    font-weight:600;
-    font-size:14px;
-    background:var(--signal);
-    color:#150900;
-    border:0;
-    border-radius:7px;
-    padding:0 22px;
-    cursor:pointer;
-    transition:filter .15s ease, transform .05s ease;
-    white-space:nowrap;
-  }
-
-  button:hover{filter:brightness(1.08);}
-  button:active{transform:scale(0.98);}
-  button:disabled{opacity:0.5;cursor:not-allowed;}
-
-  .hint{
-    margin-top:12px;
-    font-family:'JetBrains Mono',monospace;
-    font-size:11.5px;
-    color:var(--muted-2);
-  }
-
-  /* Scan log */
-  #scanLog{
-    margin-top:18px;
-    display:none;
-    font-family:'JetBrains Mono',monospace;
-    font-size:12.5px;
-    color:var(--muted);
-  }
-
-  #scanLog .line{
-    display:flex;
-    gap:10px;
-    padding:5px 0;
-    opacity:0;
-    transform:translateY(4px);
-    animation:lineIn .35s ease forwards;
-  }
-
-  #scanLog .line .ok{color:var(--green);}
-
-  @keyframes lineIn{
-    to{opacity:1;transform:translateY(0);}
-  }
-
-  /* Results */
-  #results{
-    margin-top:28px;
-    display:none;
-  }
-
-  .report{
-    background:var(--panel);
-    border:1px solid var(--border);
-    border-radius:10px;
-    padding:28px;
-  }
-
-  .report-head{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding-bottom:22px;
-    margin-bottom:22px;
-    border-bottom:1px solid var(--border);
-    flex-wrap:wrap;
-    gap:16px;
-  }
-
-  .report-head .domain{
-    font-family:'JetBrains Mono',monospace;
-    font-size:13px;
-    color:var(--muted);
-  }
-
-  .report-head .domain strong{
-    color:var(--text);
-    font-size:15px;
-    display:block;
-    margin-bottom:4px;
-  }
-
-  .grade-block{
-    display:flex;
-    align-items:center;
-    gap:16px;
-  }
-
-  .grade-letter{
-    font-family:'Space Grotesk',sans-serif;
-    font-weight:700;
-    font-size:44px;
-    line-height:1;
-    width:64px;
-    text-align:center;
-  }
-
-  .grade-score{
-    font-family:'JetBrains Mono',monospace;
-    font-size:12px;
-    color:var(--muted);
-  }
-
-  .grade-score b{
-    font-size:20px;
-    color:var(--text);
-    font-family:'Space Grotesk',sans-serif;
-  }
-
-  .metrics{
-    display:flex;
-    flex-direction:column;
-    gap:18px;
-  }
-
-  .metric-row{
-    display:flex;
-    flex-direction:column;
-    gap:7px;
-  }
-
-  .metric-top{
-    display:flex;
-    justify-content:space-between;
-    align-items:baseline;
-    font-size:13.5px;
-  }
-
-  .metric-top .name{font-weight:500;}
-
-  .metric-top .val{
-    font-family:'JetBrains Mono',monospace;
-    font-size:13px;
-    color:var(--muted);
-  }
-
-  .bar-track{
-    height:7px;
-    background:var(--bg);
-    border:1px solid var(--border);
-    border-radius:4px;
-    overflow:hidden;
-  }
-
-  .bar-fill{
-    height:100%;
-    width:0%;
-    border-radius:4px;
-    transition:width 1s cubic-bezier(.16,1,.3,1);
-  }
-
-  .notes{
-    margin-top:24px;
-    padding-top:20px;
-    border-top:1px solid var(--border);
-  }
-
-  .notes .label{
-    font-family:'JetBrains Mono',monospace;
-    font-size:11px;
-    color:var(--signal);
-    text-transform:uppercase;
-    letter-spacing:0.08em;
-    margin-bottom:10px;
-  }
-
-  .notes ul{
-    list-style:none;
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-  }
-
-  .notes li{
-    font-size:13.5px;
-    color:var(--muted);
-    padding-left:16px;
-    position:relative;
-  }
-
-  .notes li::before{
-    content:"—";
-    position:absolute;
-    left:0;
-    color:var(--muted-2);
-  }
-
-  .rescan{
-    margin-top:22px;
-    text-align:center;
-  }
-
-  .rescan a{
-    font-family:'JetBrains Mono',monospace;
-    font-size:12px;
-    color:var(--muted);
-    text-decoration:none;
-    border-bottom:1px dotted var(--muted-2);
-    cursor:pointer;
-  }
-
-  .rescan a:hover{color:var(--signal);}
-
-  footer{
-    border-top:1px solid var(--border);
-    padding:24px 0 40px;
-    display:flex;
-    justify-content:space-between;
-    flex-wrap:wrap;
-    gap:10px;
-  }
-
-  footer p{
-    font-family:'JetBrains Mono',monospace;
-    font-size:11px;
-    color:var(--muted-2);
-  }
-
-  @media (max-width:520px){
-    form{flex-direction:column;}
-    button{padding:14px;}
-    .report-head{flex-direction:column;align-items:flex-start;}
-  }
+}
 </style>
 </head>
+
 <body>
 
-<div class="wrap">
-  <header>
-    <div class="logo"><span class="logo-dot"></span>SITECHECK</div>
-    <div class="tag">v1.0 · diagnostics</div>
-  </header>
+<div class="container">
 
-  <main>
-    <p class="eyebrow">Free website audit</p>
-    <h1>Know where your site<br><span>really</span> stands.</h1>
-    <p class="lede">Enter a domain and run a full diagnostic sweep — performance, SEO, accessibility, and security checked in one pass.</p>
+<nav>
 
-    <div class="console">
-      <div class="console-bar">
-        <span></span><span></span><span></span>
-        <small>scan.sh</small>
+  <div class="logo">
+    <div class="logo-mark">S</div>
+    SiteGrade AI
+  </div>
+
+  <div class="nav-right">
+    <div class="status-pill">
+      <div class="status-dot"></div>
+      Analysis Engine Online
+    </div>
+  </div>
+
+</nav>
+
+
+<!-- HERO -->
+
+<section class="hero" id="hero">
+
+  <div class="orbit"></div>
+
+  <div class="eyebrow">
+    <span></span>
+    Website Intelligence Platform
+  </div>
+
+  <h1>
+    Your website.
+    <span class="gradient-text">Under the microscope.</span>
+  </h1>
+
+  <p class="hero-sub">
+    Analyze the most important parts of your website —
+    from speed and SEO to mobile experience, security,
+    accessibility and design.
+  </p>
+
+  <div class="input-shell">
+
+    <div class="input-box">
+
+      <input
+        id="urlInput"
+        type="text"
+        autocomplete="off"
+        placeholder="Enter your company domain..."
+      >
+
+      <button
+        class="scan-btn"
+        id="scanButton"
+        onclick="analyzeWebsite()"
+      >
+        Analyze Site →
+      </button>
+
+    </div>
+
+  </div>
+
+  <div class="trust-row">
+    <span>● No account required</span>
+    <span>● Free analysis</span>
+    <span>● Instant results</span>
+  </div>
+
+</section>
+
+
+<!-- LOADING -->
+
+<section id="loading">
+
+  <div class="scanner">
+    <div class="scanner-core"></div>
+  </div>
+
+  <div class="loading-title">
+    Analyzing website
+  </div>
+
+  <div class="loading-status mono" id="loadingStatus">
+    INITIALIZING SCAN...
+  </div>
+
+</section>
+
+
+<!-- RESULTS -->
+
+<section id="results">
+
+  <div class="result-top">
+
+    <div class="glass result-info">
+
+      <div class="kicker">
+        Analysis Complete
       </div>
-      <div class="console-body">
-        <form id="scanForm">
-          <div class="prompt">
-            <span>&gt;</span>
-            <input id="domainInput" type="text" placeholder="yourcompany.com" autocomplete="off" required>
+
+      <div class="tested-url" id="testedUrl"></div>
+
+      <h2 id="resultTitle">
+        Website performance report
+      </h2>
+
+      <p id="resultDescription">
+        Your website has been analyzed across multiple
+        performance and user experience categories.
+      </p>
+
+    </div>
+
+
+    <div class="glass score-card">
+
+      <div class="score-ring" id="scoreRing">
+
+        <div class="score-inner">
+
+          <div class="score-number" id="overallScore">
+            0
           </div>
-          <button type="submit" id="scanBtn">Run scan</button>
-        </form>
-        <p class="hint">No signup required. Takes about 3 seconds.</p>
 
-        <div id="scanLog"></div>
+          <div class="score-out">
+            OVERALL SCORE
+          </div>
+
+        </div>
+
       </div>
+
     </div>
 
-    <div id="results">
-      <div class="report" id="report"></div>
-      <div class="rescan"><a id="rescanLink">↻ Scan another domain</a></div>
-    </div>
-  </main>
+  </div>
 
-  <footer>
-    <p>SITECHECK — illustrative diagnostics, for demo purposes only.</p>
-    <p>© 2026</p>
-  </footer>
+
+  <div class="metrics-heading">
+    <h3>Performance signals</h3>
+    <span>8 CATEGORIES</span>
+  </div>
+
+
+  <div class="metrics">
+
+    <div class="glass metric">
+      <div class="metric-head">
+        <div class="metric-icon">⚡</div>
+        <div class="metric-score" id="speedScore">--</div>
+      </div>
+      <div class="metric-name">Speed</div>
+      <div class="progress">
+        <div class="progress-fill" id="speedBar"></div>
+      </div>
+      <div class="metric-desc">Page load and performance signals.</div>
+    </div>
+
+
+    <div class="glass metric">
+      <div class="metric-head">
+        <div class="metric-icon">⌕</div>
+        <div class="metric-score" id="seoScore">--</div>
+      </div>
+      <div class="metric-name">SEO</div>
+      <div class="progress">
+        <div class="progress-fill" id="seoBar"></div>
+      </div>
+      <div class="metric-desc">Search visibility and page structure.</div>
+    </div>
+
+
+    <div class="glass metric">
+      <div class="metric-head">
+        <div class="metric-icon">▣</div>
+        <div class="metric-score" id="mobileScore">--</div>
+      </div>
+      <div class="metric-name">Mobile</div>
+      <div class="progress">
+        <div class="progress-fill" id="mobileBar"></div>
+      </div>
+      <div class="metric-desc">Responsive design and mobile usability.</div>
+    </div>
+
+
+    <div class="glass metric">
+      <div class="metric-head">
+        <div class="metric-icon">◇</div>
+        <div class="metric-score" id="securityScore">--</div>
+      </div>
+      <div class="metric-name">Security</div>
+      <div class="progress">
+        <div class="progress-fill" id="securityBar"></div>
+      </div>
+      <div class="metric-desc">Basic security and HTTPS signals.</div>
+    </div>
+
+
+    <div class="glass metric">
+      <div class="metric-head">
+        <div class="metric-icon">◎</div>
+        <div class="metric-score" id="accessibilityScore">--</div>
+      </div>
+      <div class="metric-name">Accessibility</div>
+      <div class="progress">
+        <div class="progress-fill" id="accessibilityBar"></div>
+      </div>
+      <div class="metric-desc">Ease of use across different visitors.</div>
+    </div>
+
+
+    <div class="glass metric">
+      <div class="metric-head">
+        <div class="metric-icon">✦</div>
+        <div class="metric-score" id="contentScore">--</div>
+      </div>
+      <div class="metric-name">Content</div>
+      <div class="progress">
+        <div class="progress-fill" id="contentBar"></div>
+      </div>
+      <div class="metric-desc">Clarity, structure and usefulness.</div>
+    </div>
+
+
+    <div class="glass metric">
+      <div class="metric-head">
+        <div class="metric-icon">◈</div>
+        <div class="metric-score" id="designScore">--</div>
+      </div>
+      <div class="metric-name">Design</div>
+      <div class="progress">
+        <div class="progress-fill" id="designBar"></div>
+      </div>
+      <div class="metric-desc">Visual quality and user experience.</div>
+    </div>
+
+
+    <div class="glass metric">
+      <div class="metric-head">
+        <div class="metric-icon">↗</div>
+        <div class="metric-score" id="performanceScore">--</div>
+      </div>
+      <div class="metric-name">Performance</div>
+      <div class="progress">
+        <div class="progress-fill" id="performanceBar"></div>
+      </div>
+      <div class="metric-desc">Overall technical quality.</div>
+    </div>
+
+  </div>
+
+
+  <div class="glass recommendation">
+
+    <div class="recommendation-content">
+
+      <div class="kicker">
+        Optimization opportunity
+      </div>
+
+      <h3 id="recommendationTitle">
+        Areas worth improving
+      </h3>
+
+      <p id="recommendationText">
+        Your website has opportunities to improve its
+        digital performance.
+      </p>
+
+    </div>
+
+    <button class="analyze-again" onclick="resetAnalyzer()">
+      Analyze another →
+    </button>
+
+  </div>
+
+</section>
+
 </div>
 
+
+<footer>
+  SiteGrade AI · Website intelligence platform · 2026
+</footer>
+
+
 <script>
-const form = document.getElementById('scanForm');
-const domainInput = document.getElementById('domainInput');
-const scanBtn = document.getElementById('scanBtn');
-const scanLog = document.getElementById('scanLog');
-const results = document.getElementById('results');
-const report = document.getElementById('report');
-const rescanLink = document.getElementById('rescanLink');
 
-const steps = [
-  "Resolving DNS records",
-  "Measuring page load time",
-  "Checking mobile responsiveness",
-  "Auditing on-page SEO signals",
-  "Scanning for accessibility issues",
-  "Checking SSL & security headers"
-];
+/*
+=========================================================
+  SITEGRADE AI
+=========================================================
 
-function rand(min, max){
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+  IMPORTANT:
+
+  This is a static demo version.
+
+  There is no external API or backend, so the scores
+  are generated locally.
+
+  localStorage is used so the same normalized URL
+  always receives the exact same score on the same
+  browser/device.
+
+=========================================================
+*/
+
+
+const input = document.getElementById("urlInput");
+const scanButton = document.getElementById("scanButton");
+
+
+/*
+---------------------------------------------------------
+  URL NORMALIZATION
+---------------------------------------------------------
+*/
+
+function normalizeURL(value) {
+
+  value = value.trim().toLowerCase();
+
+  value = value
+    .replace(/^https?:\/\//, "")
+    .replace(/^www\./, "");
+
+  value = value.split("/")[0];
+  value = value.split("?")[0];
+  value = value.split("#")[0];
+
+  return value;
 }
 
-function clamp(n, min, max){
-  return Math.max(min, Math.min(max, n));
-}
 
-function gradeFor(score){
-  if(score >= 90) return {letter:"A", color:"var(--green)"};
-  if(score >= 75) return {letter:"B", color:"var(--teal)"};
-  if(score >= 60) return {letter:"C", color:"var(--amber)"};
-  if(score >= 45) return {letter:"D", color:"var(--signal)"};
-  return {letter:"F", color:"var(--red)"};
-}
+/*
+---------------------------------------------------------
+  SEEDED RANDOM NUMBER
+---------------------------------------------------------
 
-function barColor(score){
-  if(score >= 75) return "var(--teal)";
-  if(score >= 60) return "var(--amber)";
-  if(score >= 45) return "var(--signal)";
-  return "var(--red)";
-}
+  Instead of Math.random(), this generates a number
+  based on the website's domain.
 
-const notesBank = {
-  low: [
-    "Large uncompressed images are slowing down initial load",
-    "Missing meta descriptions on key pages",
-    "No structured data (schema markup) detected",
-    "Render-blocking scripts delay first paint",
-    "Several images are missing alt text",
-    "Security headers (CSP, HSTS) not fully configured",
-    "Mobile tap targets are too close together",
-    "Title tags are duplicated across pages",
-    "No sitemap.xml found at the expected path",
-    "Text contrast falls below accessibility guidelines in places"
-  ],
-  mid: [
-    "Caching headers could be tuned for faster repeat visits",
-    "Some third-party scripts are adding measurable delay",
-    "Heading structure could be more consistent",
-    "A handful of broken internal links were detected",
-    "Core Web Vitals are close to passing but not there yet",
-    "Alt text is present but inconsistent in quality"
-  ]
-};
+  This means:
 
-function pickNotes(count){
-  const pool = [...notesBank.low, ...notesBank.mid];
-  const chosen = [];
-  while(chosen.length < count && pool.length){
-    const i = rand(0, pool.length - 1);
-    chosen.push(pool.splice(i,1)[0]);
+  example.com
+  -> same seed
+  -> same numbers
+  -> same scores
+
+  forever on that browser.
+
+---------------------------------------------------------
+*/
+
+function seededRandom(seed) {
+
+  let hash = 0;
+
+  for (let i = 0; i < seed.length; i++) {
+
+    hash =
+      ((hash << 5) - hash) +
+      seed.charCodeAt(i);
+
+    hash |= 0;
   }
-  return chosen;
+
+  let x = Math.sin(hash) * 10000;
+
+  return x - Math.floor(x);
 }
 
-function generateScores(){
-  // Overall score deliberately capped so a "perfect" result never appears
-  const overall = rand(38, 76);
-  const jitter = () => clamp(overall + rand(-13, 9), 18, 79);
+
+/*
+---------------------------------------------------------
+  GENERATE SCORE
+---------------------------------------------------------
+*/
+
+function seededScore(seed, minimum, maximum) {
+
+  const random = seededRandom(seed);
+
+  return Math.floor(
+    minimum +
+    random * (maximum - minimum + 1)
+  );
+}
+
+
+/*
+---------------------------------------------------------
+  CREATE WEBSITE SCORES
+---------------------------------------------------------
+
+  Scores intentionally stay conservative.
+
+  This prevents random websites from getting
+  suspiciously perfect scores.
+---------------------------------------------------------
+*/
+
+function createScores(domain) {
+
   return {
-    overall,
-    performance: jitter(),
-    seo: jitter(),
-    accessibility: jitter(),
-    bestPractices: jitter(),
-    security: jitter()
+
+    speed:
+      seededScore(domain + "-speed", 38, 74),
+
+    seo:
+      seededScore(domain + "-seo", 42, 76),
+
+    mobile:
+      seededScore(domain + "-mobile", 45, 79),
+
+    security:
+      seededScore(domain + "-security", 52, 82),
+
+    accessibility:
+      seededScore(domain + "-accessibility", 40, 73),
+
+    content:
+      seededScore(domain + "-content", 44, 77),
+
+    design:
+      seededScore(domain + "-design", 48, 82),
+
+    performance:
+      seededScore(domain + "-performance", 40, 75)
+
   };
+
 }
 
-function cleanDomain(raw){
-  let d = raw.trim().toLowerCase();
-  d = d.replace(/^https?:\/\//, '').replace(/\/$/, '');
-  return d || "example.com";
+
+/*
+---------------------------------------------------------
+  OVERALL SCORE
+---------------------------------------------------------
+*/
+
+function calculateOverall(scores) {
+
+  let score = Math.round(
+
+    scores.speed * .16 +
+    scores.seo * .15 +
+    scores.mobile * .14 +
+    scores.security * .10 +
+    scores.accessibility * .10 +
+    scores.content * .12 +
+    scores.design * .11 +
+    scores.performance * .12
+
+  );
+
+  return Math.min(
+    79,
+    Math.max(42, score)
+  );
+
 }
 
-function renderReport(domain, scores){
-  const g = gradeFor(scores.overall);
-  const metrics = [
-    {name:"Performance", key:"performance"},
-    {name:"SEO", key:"seo"},
-    {name:"Accessibility", key:"accessibility"},
-    {name:"Best Practices", key:"bestPractices"},
-    {name:"Security", key:"security"}
-  ];
 
-  report.innerHTML = `
-    <div class="report-head">
-      <div class="domain">
-        <strong>${domain}</strong>
-        scan complete · ${new Date().toLocaleDateString()}
-      </div>
-      <div class="grade-block">
-        <div class="grade-letter" style="color:${g.color}">${g.letter}</div>
-        <div class="grade-score">Overall score<br><b>${scores.overall}</b>/100</div>
-      </div>
-    </div>
-    <div class="metrics">
-      ${metrics.map(m => `
-        <div class="metric-row">
-          <div class="metric-top">
-            <span class="name">${m.name}</span>
-            <span class="val">${scores[m.key]}/100</span>
-          </div>
-          <div class="bar-track">
-            <div class="bar-fill" id="bar-${m.key}" style="background:${barColor(scores[m.key])}"></div>
-          </div>
-        </div>
-      `).join('')}
-    </div>
-    <div class="notes">
-      <div class="label">Flagged issues</div>
-      <ul>
-        ${pickNotes(4).map(n => `<li>${n}</li>`).join('')}
-      </ul>
-    </div>
-  `;
+/*
+---------------------------------------------------------
+  SCORE COLOR
+---------------------------------------------------------
+*/
 
-  results.style.display = 'block';
-  requestAnimationFrame(() => {
-    metrics.forEach(m => {
-      const el = document.getElementById(`bar-${m.key}`);
-      if(el) el.style.width = scores[m.key] + '%';
-    });
-  });
+function scoreColor(score) {
+
+  if (score >= 75)
+    return "#40e59a";
+
+  if (score >= 60)
+    return "#f7c948";
+
+  return "#ff5c7a";
+
 }
 
-function runScan(domain){
-  scanBtn.disabled = true;
-  results.style.display = 'none';
-  scanLog.style.display = 'block';
-  scanLog.innerHTML = '';
 
-  steps.forEach((step, i) => {
-    setTimeout(() => {
-      const line = document.createElement('div');
-      line.className = 'line';
-      line.style.animationDelay = '0s';
-      line.innerHTML = `<span class="ok">✓</span> ${step}`;
-      scanLog.appendChild(line);
-    }, i * 260);
-  });
+/*
+---------------------------------------------------------
+  RESULT TITLE
+---------------------------------------------------------
+*/
+
+function resultTitle(score) {
+
+  if (score >= 75)
+    return "Strong foundation — but there is still room to grow";
+
+  if (score >= 60)
+    return "Your website has several optimization opportunities";
+
+  return "Your website needs attention in several key areas";
+
+}
+
+
+/*
+---------------------------------------------------------
+  METRIC DISPLAY
+---------------------------------------------------------
+*/
+
+function displayMetric(name, score) {
+
+  const scoreElement =
+    document.getElementById(name + "Score");
+
+  const bar =
+    document.getElementById(name + "Bar");
+
+  scoreElement.textContent = score;
+
+  scoreElement.style.color =
+    scoreColor(score);
+
+  bar.style.background =
+    scoreColor(score);
 
   setTimeout(() => {
-    scanBtn.disabled = false;
-    const scores = generateScores();
-    renderReport(domain, scores);
-    results.scrollIntoView({behavior:'smooth', block:'start'});
-  }, steps.length * 260 + 350);
+
+    bar.style.width =
+      score + "%";
+
+  }, 100);
+
 }
 
-form.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const domain = cleanDomain(domainInput.value);
-  runScan(domain);
-});
 
-rescanLink.addEventListener('click', () => {
-  results.style.display = 'none';
-  scanLog.style.display = 'none';
-  domainInput.value = '';
-  domainInput.focus();
-  window.scrollTo({top:0, behavior:'smooth'});
-});
+/*
+---------------------------------------------------------
+  ANALYZE WEBSITE
+---------------------------------------------------------
+*/
+
+function analyzeWebsite() {
+
+  let rawURL =
+    input.value.trim();
+
+  if (!rawURL) {
+
+    input.focus();
+
+    input.style.boxShadow =
+      "0 0 0 2px #ff5c7a";
+
+    setTimeout(() => {
+
+      input.style.boxShadow = "";
+
+    }, 1200);
+
+    return;
+  }
+
+
+  const domain =
+    normalizeURL(rawURL);
+
+
+  if (!domain.includes(".")) {
+
+    input.focus();
+
+    input.style.boxShadow =
+      "0 0 0 2px #ff5c7a";
+
+    setTimeout(() => {
+
+      input.style.boxShadow = "";
+
+    }, 1200);
+
+    return;
+  }
+
+
+  scanButton.disabled = true;
+
+  document.getElementById("hero")
+    .style.display = "none";
+
+  document.getElementById("results")
+    .style.display = "none";
+
+  document.getElementById("loading")
+    .style.display = "flex";
+
+
+  const statuses = [
+
+    "CONNECTING TO TARGET...",
+    "READING PAGE STRUCTURE...",
+    "ANALYZING PERFORMANCE...",
+    "SCANNING SEO SIGNALS...",
+    "CHECKING MOBILE EXPERIENCE...",
+    "EVALUATING ACCESSIBILITY...",
+    "REVIEWING SECURITY...",
+    "BUILDING PERFORMANCE MODEL...",
+    "FINALIZING REPORT..."
+
+  ];
+
+
+  let index = 0;
+
+  const status =
+    document.getElementById("loadingStatus");
+
+
+  status.textContent =
+    statuses[0];
+
+
+  const interval =
+    setInterval(() => {
+
+      index++;
+
+      if (index < statuses.length) {
+
+        status.textContent =
+          statuses[index];
+
+      }
+
+    }, 480);
+
+
+  /*
+    Check localStorage first.
+
+    If this domain was previously tested,
+    use the exact same stored scores.
+  */
+
+  const storageKey =
+    "sitegrade_" + domain;
+
+  let stored =
+    localStorage.getItem(storageKey);
+
+  let scores;
+
+
+  if (stored) {
+
+    try {
+
+      scores = JSON.parse(stored);
+
+    } catch {
+
+      scores = createScores(domain);
+
+    }
+
+  } else {
+
+    scores = createScores(domain);
+
+    localStorage.setItem(
+      storageKey,
+      JSON.stringify(scores)
+    );
+
+  }
+
+
+  const overall =
+    calculateOverall(scores);
+
+
+  setTimeout(() => {
+
+    clearInterval(interval);
+
+
+    document.getElementById("loading")
+      .style.display = "none";
+
+    document.getElementById("results")
+      .style.display = "block";
+
+
+    document.getElementById("testedUrl")
+      .textContent = domain;
+
+
+    document.getElementById("overallScore")
+      .textContent = overall;
+
+
+    document.getElementById("resultTitle")
+      .textContent =
+      resultTitle(overall);
+
+
+    document.getElementById("resultDescription")
+      .textContent =
+      "Your site was evaluated across eight core digital experience signals. Scores are designed to highlight potential opportunities rather than represent a certified technical audit.";
+
+
+    /*
+      Score ring
+    */
+
+    const ring =
+      document.getElementById("scoreRing");
+
+    const degrees =
+      Math.round(overall * 3.6);
+
+
+    ring.style.background = `
+      radial-gradient(
+        circle,
+        #0c111a 59%,
+        transparent 60%
+      ),
+      conic-gradient(
+        var(--cyan) 0deg,
+        var(--purple) ${degrees}deg,
+        rgba(255,255,255,.06) ${degrees}deg
+      )
+    `;
+
+
+    /*
+      Metrics
+    */
+
+    displayMetric(
+      "speed",
+      scores.speed
+    );
+
+    displayMetric(
+      "seo",
+      scores.seo
+    );
+
+    displayMetric(
+      "mobile",
+      scores.mobile
+    );
+
+    displayMetric(
+      "security",
+      scores.security
+    );
+
+    displayMetric(
+      "accessibility",
+      scores.accessibility
+    );
+
+    displayMetric(
+      "content",
+      scores.content
+    );
+
+    displayMetric(
+      "design",
+      scores.design
+    );
+
+    displayMetric(
+      "performance",
+      scores.performance
+    );
+
+
+    /*
+      Find weakest categories.
+    */
+
+    const weakest =
+      Object.entries(scores)
+        .sort((a,b) => a[1] - b[1])
+        .slice(0,2);
+
+
+    const prettyNames = {
+
+      speed: "Speed",
+      seo: "SEO",
+      mobile: "Mobile",
+      security: "Security",
+      accessibility: "Accessibility",
+      content: "Content",
+      design: "Design",
+      performance: "Performance"
+
+    };
+
+
+    document.getElementById(
+      "recommendationTitle"
+    ).textContent =
+      `${prettyNames[weakest[0][0]]} + ${prettyNames[weakest[1][0]]} are your biggest opportunities`;
+
+
+    document.getElementById(
+      "recommendationText"
+    ).textContent =
+      `Based on this analysis, ${prettyNames[weakest[0][0]]} scored ${weakest[0][1]} and ${prettyNames[weakest[1][0]]} scored ${weakest[1][1]}. Improving these areas could have the biggest impact on the overall website experience.`;
+
+
+    scanButton.disabled = false;
+
+
+    window.scrollTo({
+
+      top:
+        document.getElementById("results")
+          .offsetTop - 20,
+
+      behavior: "smooth"
+
+    });
+
+
+  }, 4400);
+
+}
+
+
+/*
+---------------------------------------------------------
+  ENTER KEY
+---------------------------------------------------------
+*/
+
+input.addEventListener(
+  "keydown",
+  function(event) {
+
+    if (event.key === "Enter") {
+
+      analyzeWebsite();
+
+    }
+
+  }
+);
+
+
+/*
+---------------------------------------------------------
+  RESET
+---------------------------------------------------------
+*/
+
+function resetAnalyzer() {
+
+  document.getElementById("results")
+    .style.display = "none";
+
+  document.getElementById("hero")
+    .style.display = "flex";
+
+  input.value = "";
+
+  window.scrollTo({
+
+    top: 0,
+
+    behavior: "smooth"
+
+  });
+
+
+  setTimeout(() => {
+
+    input.focus();
+
+  }, 500);
+
+}
+
 </script>
 
 </body>
 </html>
+```
