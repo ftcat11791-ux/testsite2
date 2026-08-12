@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SiteCheck — Website Health Diagnostics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0E14;
+    --panel:#10151F;
+    --panel-2:#141B27;
+    --border:#1E2633;
+    --text:#E8ECF1;
+    --muted:#7A8699;
+    --muted-2:#4E5A6E;
+    --signal:#FF6B35;
+    --signal-dim:#7A3A1F;
+    --green:#3DDC84;
+    --amber:#F5A623;
+    --red:#FF5470;
+    --teal:#4FD1C5;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    line-height:1.5;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size:64px 64px;
+    background-position:center top;
+    min-height:100vh;
+  }
+
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    background:radial-gradient(ellipse 900px 500px at 50% 0%, rgba(255,107,53,0.07), transparent 70%);
+    pointer-events:none;
+    z-index:0;
+  }
+
+  .wrap{
+    max-width:760px;
+    margin:0 auto;
+    padding:0 24px;
+    position:relative;
+    z-index:1;
+  }
+
+  header{
+    padding:32px 0 24px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    border-bottom:1px solid var(--border);
+  }
+
+  .logo{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:18px;
+    letter-spacing:0.02em;
+  }
+
+  .logo-dot{
+    width:9px;height:9px;border-radius:50%;
+    background:var(--signal);
+    box-shadow:0 0 0 3px var(--signal-dim);
+  }
+
+  header .tag{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--muted);
+  }
+
+  main{padding:56px 0 40px;}
+
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--signal);
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    margin-bottom:14px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+
+  .eyebrow::before{
+    content:"";
+    width:16px;height:1px;
+    background:var(--signal);
+  }
+
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:clamp(32px, 5.5vw, 46px);
+    line-height:1.12;
+    letter-spacing:-0.01em;
+    margin-bottom:16px;
+  }
+
+  h1 span{color:var(--muted);}
+
+  .lede{
+    color:var(--muted);
+    font-size:16px;
+    max-width:52ch;
+    margin-bottom:36px;
+  }
+
+  .console{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:10px;
+    overflow:hidden;
+  }
+
+  .console-bar{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:12px 16px;
+    border-bottom:1px solid var(--border);
+    background:var(--panel-2);
+  }
+
+  .console-bar span{
+    width:9px;height:9px;border-radius:50%;
+    background:var(--muted-2);
+  }
+
+  .console-bar small{
+    margin-left:8px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--muted);
+  }
+
+  .console-body{padding:22px 20px;}
+
+  form{
+    display:flex;
+    gap:10px;
+    align-items:stretch;
+  }
+
+  .prompt{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex:1;
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:7px;
+    padding:0 14px;
+    transition:border-color .15s ease;
+  }
+
+  .prompt:focus-within{border-color:var(--signal);}
+
+  .prompt span{
+    font-family:'JetBrains Mono',monospace;
+    color:var(--signal);
+    font-size:14px;
+  }
+
+  .prompt input{
+    flex:1;
+    background:transparent;
+    border:0;
+    outline:0;
+    color:var(--text);
+    font-family:'JetBrains Mono',monospace;
+    font-size:14px;
+    padding:14px 0;
+  }
+
+  .prompt input::placeholder{color:var(--muted-2);}
+
+  button{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    background:var(--signal);
+    color:#150900;
+    border:0;
+    border-radius:7px;
+    padding:0 22px;
+    cursor:pointer;
+    transition:filter .15s ease, transform .05s ease;
+    white-space:nowrap;
+  }
+
+  button:hover{filter:brightness(1.08);}
+  button:active{transform:scale(0.98);}
+  button:disabled{opacity:0.5;cursor:not-allowed;}
+
+  .hint{
+    margin-top:12px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    color:var(--muted-2);
+  }
+
+  /* Scan log */
+  #scanLog{
+    margin-top:18px;
+    display:none;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    color:var(--muted);
+  }
+
+  #scanLog .line{
+    display:flex;
+    gap:10px;
+    padding:5px 0;
+    opacity:0;
+    transform:translateY(4px);
+    animation:lineIn .35s ease forwards;
+  }
+
+  #scanLog .line .ok{color:var(--green);}
+
+  @keyframes lineIn{
+    to{opacity:1;transform:translateY(0);}
+  }
+
+  /* Results */
+  #results{
+    margin-top:28px;
+    display:none;
+  }
+
+  .report{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:28px;
+  }
+
+  .report-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding-bottom:22px;
+    margin-bottom:22px;
+    border-bottom:1px solid var(--border);
+    flex-wrap:wrap;
+    gap:16px;
+  }
+
+  .report-head .domain{
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;
+    color:var(--muted);
+  }
+
+  .report-head .domain strong{
+    color:var(--text);
+    font-size:15px;
+    display:block;
+    margin-bottom:4px;
+  }
+
+  .grade-block{
+    display:flex;
+    align-items:center;
+    gap:16px;
+  }
+
+  .grade-letter{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:44px;
+    line-height:1;
+    width:64px;
+    text-align:center;
+  }
+
+  .grade-score{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--muted);
+  }
+
+  .grade-score b{
+    font-size:20px;
+    color:var(--text);
+    font-family:'Space Grotesk',sans-serif;
+  }
+
+  .metrics{
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+
+  .metric-row{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+  }
+
+  .metric-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    font-size:13.5px;
+  }
+
+  .metric-top .name{font-weight:500;}
+
+  .metric-top .val{
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;
+    color:var(--muted);
+  }
+
+  .bar-track{
+    height:7px;
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:4px;
+    overflow:hidden;
+  }
+
+  .bar-fill{
+    height:100%;
+    width:0%;
+    border-radius:4px;
+    transition:width 1s cubic-bezier(.16,1,.3,1);
+  }
+
+  .notes{
+    margin-top:24px;
+    padding-top:20px;
+    border-top:1px solid var(--border);
+  }
+
+  .notes .label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--signal);
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    margin-bottom:10px;
+  }
+
+  .notes ul{
+    list-style:none;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+
+  .notes li{
+    font-size:13.5px;
+    color:var(--muted);
+    padding-left:16px;
+    position:relative;
+  }
+
+  .notes li::before{
+    content:"—";
+    position:absolute;
+    left:0;
+    color:var(--muted-2);
+  }
+
+  .rescan{
+    margin-top:22px;
+    text-align:center;
+  }
+
+  .rescan a{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--muted);
+    text-decoration:none;
+    border-bottom:1px dotted var(--muted-2);
+    cursor:pointer;
+  }
+
+  .rescan a:hover{color:var(--signal);}
+
+  footer{
+    border-top:1px solid var(--border);
+    padding:24px 0 40px;
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+
+  footer p{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--muted-2);
+  }
+
+  @media (max-width:520px){
+    form{flex-direction:column;}
+    button{padding:14px;}
+    .report-head{flex-direction:column;align-items:flex-start;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="logo"><span class="logo-dot"></span>SITECHECK</div>
+    <div class="tag">v1.0 · diagnostics</div>
+  </header>
+
+  <main>
+    <p class="eyebrow">Free website audit</p>
+    <h1>Know where your site<br><span>really</span> stands.</h1>
+    <p class="lede">Enter a domain and run a full diagnostic sweep — performance, SEO, accessibility, and security checked in one pass.</p>
+
+    <div class="console">
+      <div class="console-bar">
+        <span></span><span></span><span></span>
+        <small>scan.sh</small>
+      </div>
+      <div class="console-body">
+        <form id="scanForm">
+          <div class="prompt">
+            <span>&gt;</span>
+            <input id="domainInput" type="text" placeholder="yourcompany.com" autocomplete="off" required>
+          </div>
+          <button type="submit" id="scanBtn">Run scan</button>
+        </form>
+        <p class="hint">No signup required. Takes about 3 seconds.</p>
+
+        <div id="scanLog"></div>
+      </div>
+    </div>
+
+    <div id="results">
+      <div class="report" id="report"></div>
+      <div class="rescan"><a id="rescanLink">↻ Scan another domain</a></div>
+    </div>
+  </main>
+
+  <footer>
+    <p>SITECHECK — illustrative diagnostics, for demo purposes only.</p>
+    <p>© 2026</p>
+  </footer>
+</div>
+
+<script>
+const form = document.getElementById('scanForm');
+const domainInput = document.getElementById('domainInput');
+const scanBtn = document.getElementById('scanBtn');
+const scanLog = document.getElementById('scanLog');
+const results = document.getElementById('results');
+const report = document.getElementById('report');
+const rescanLink = document.getElementById('rescanLink');
+
+const steps = [
+  "Resolving DNS records",
+  "Measuring page load time",
+  "Checking mobile responsiveness",
+  "Auditing on-page SEO signals",
+  "Scanning for accessibility issues",
+  "Checking SSL & security headers"
+];
+
+function rand(min, max){
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function clamp(n, min, max){
+  return Math.max(min, Math.min(max, n));
+}
+
+function gradeFor(score){
+  if(score >= 90) return {letter:"A", color:"var(--green)"};
+  if(score >= 75) return {letter:"B", color:"var(--teal)"};
+  if(score >= 60) return {letter:"C", color:"var(--amber)"};
+  if(score >= 45) return {letter:"D", color:"var(--signal)"};
+  return {letter:"F", color:"var(--red)"};
+}
+
+function barColor(score){
+  if(score >= 75) return "var(--teal)";
+  if(score >= 60) return "var(--amber)";
+  if(score >= 45) return "var(--signal)";
+  return "var(--red)";
+}
+
+const notesBank = {
+  low: [
+    "Large uncompressed images are slowing down initial load",
+    "Missing meta descriptions on key pages",
+    "No structured data (schema markup) detected",
+    "Render-blocking scripts delay first paint",
+    "Several images are missing alt text",
+    "Security headers (CSP, HSTS) not fully configured",
+    "Mobile tap targets are too close together",
+    "Title tags are duplicated across pages",
+    "No sitemap.xml found at the expected path",
+    "Text contrast falls below accessibility guidelines in places"
+  ],
+  mid: [
+    "Caching headers could be tuned for faster repeat visits",
+    "Some third-party scripts are adding measurable delay",
+    "Heading structure could be more consistent",
+    "A handful of broken internal links were detected",
+    "Core Web Vitals are close to passing but not there yet",
+    "Alt text is present but inconsistent in quality"
+  ]
+};
+
+function pickNotes(count){
+  const pool = [...notesBank.low, ...notesBank.mid];
+  const chosen = [];
+  while(chosen.length < count && pool.length){
+    const i = rand(0, pool.length - 1);
+    chosen.push(pool.splice(i,1)[0]);
+  }
+  return chosen;
+}
+
+function generateScores(){
+  // Overall score deliberately capped so a "perfect" result never appears
+  const overall = rand(38, 76);
+  const jitter = () => clamp(overall + rand(-13, 9), 18, 79);
+  return {
+    overall,
+    performance: jitter(),
+    seo: jitter(),
+    accessibility: jitter(),
+    bestPractices: jitter(),
+    security: jitter()
+  };
+}
+
+function cleanDomain(raw){
+  let d = raw.trim().toLowerCase();
+  d = d.replace(/^https?:\/\//, '').replace(/\/$/, '');
+  return d || "example.com";
+}
+
+function renderReport(domain, scores){
+  const g = gradeFor(scores.overall);
+  const metrics = [
+    {name:"Performance", key:"performance"},
+    {name:"SEO", key:"seo"},
+    {name:"Accessibility", key:"accessibility"},
+    {name:"Best Practices", key:"bestPractices"},
+    {name:"Security", key:"security"}
+  ];
+
+  report.innerHTML = `
+    <div class="report-head">
+      <div class="domain">
+        <strong>${domain}</strong>
+        scan complete · ${new Date().toLocaleDateString()}
+      </div>
+      <div class="grade-block">
+        <div class="grade-letter" style="color:${g.color}">${g.letter}</div>
+        <div class="grade-score">Overall score<br><b>${scores.overall}</b>/100</div>
+      </div>
+    </div>
+    <div class="metrics">
+      ${metrics.map(m => `
+        <div class="metric-row">
+          <div class="metric-top">
+            <span class="name">${m.name}</span>
+            <span class="val">${scores[m.key]}/100</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" id="bar-${m.key}" style="background:${barColor(scores[m.key])}"></div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="notes">
+      <div class="label">Flagged issues</div>
+      <ul>
+        ${pickNotes(4).map(n => `<li>${n}</li>`).join('')}
+      </ul>
+    </div>
+  `;
+
+  results.style.display = 'block';
+  requestAnimationFrame(() => {
+    metrics.forEach(m => {
+      const el = document.getElementById(`bar-${m.key}`);
+      if(el) el.style.width = scores[m.key] + '%';
+    });
+  });
+}
+
+function runScan(domain){
+  scanBtn.disabled = true;
+  results.style.display = 'none';
+  scanLog.style.display = 'block';
+  scanLog.innerHTML = '';
+
+  steps.forEach((step, i) => {
+    setTimeout(() => {
+      const line = document.createElement('div');
+      line.className = 'line';
+      line.style.animationDelay = '0s';
+      line.innerHTML = `<span class="ok">✓</span> ${step}`;
+      scanLog.appendChild(line);
+    }, i * 260);
+  });
+
+  setTimeout(() => {
+    scanBtn.disabled = false;
+    const scores = generateScores();
+    renderReport(domain, scores);
+    results.scrollIntoView({behavior:'smooth', block:'start'});
+  }, steps.length * 260 + 350);
+}
+
+form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const domain = cleanDomain(domainInput.value);
+  runScan(domain);
+});
+
+rescanLink.addEventListener('click', () => {
+  results.style.display = 'none';
+  scanLog.style.display = 'none';
+  domainInput.value = '';
+  domainInput.focus();
+  window.scrollTo({top:0, behavior:'smooth'});
+});
+</script>
+
+</body>
+</html>
